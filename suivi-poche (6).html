@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr" style="background:#0f1117;">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Suivi Poche">
+<title>Suivi Poche</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2a2d3a;
+    --green: #00e5a0;
+    --orange: #ff7b35;
+    --text: #f0f0f5;
+    --muted: #6b6f85;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg) !important;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    padding-top: max(24px, env(safe-area-inset-top));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+
+  .container { width: 100%; max-width: 480px; }
+
+  .header { text-align: center; margin-bottom: 32px; }
+  .header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .header h1 span { color: var(--green); }
+  .header p { color: var(--muted); font-size: 12px; font-family: 'DM Mono', monospace; line-height: 1.6; }
+  .header p b { color: var(--text); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .input-zone { margin-bottom: 16px; }
+
+  .input-zone textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    padding: 16px;
+    outline: none;
+    resize: none;
+    height: 90px;
+    transition: border-color 0.15s;
+    line-height: 1.4;
+    -webkit-appearance: none;
+  }
+
+  .input-zone textarea:focus { border-color: var(--green); }
+  .input-zone textarea::placeholder { color: var(--muted); font-weight: 400; font-size: 14px; }
+
+  .preview {
+    display: none;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .preview.visible { display: flex; }
+
+  .tag { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+  .tag.courses { background: rgba(0,229,160,0.12); color: var(--green); border: 1px solid rgba(0,229,160,0.3); }
+  .tag.sorties { background: rgba(255,123,53,0.12); color: var(--orange); border: 1px solid rgba(255,123,53,0.3); }
+  .tag.error { background: rgba(255,77,109,0.12); color: #ff4d6d; border: 1px solid rgba(255,77,109,0.3); }
+
+  .preview-detail { color: var(--text); flex: 1; }
+  .preview-amount { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .preview-amount.courses { color: var(--green); }
+  .preview-amount.sorties { color: var(--orange); }
+
+  .btn-send {
+    width: 100%;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    background: var(--green);
+    color: #0f1117;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-appearance: none;
+    transition: opacity 0.15s;
+  }
+  .btn-send:active { opacity: 0.8; }
+  .btn-send.sorties { background: var(--orange); }
+  .btn-send:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .semaine-info { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-align: center; margin-top: 12px; }
+  .semaine-info span { color: var(--green); }
+
+  .history h3 { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .history-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .history-item:last-child { border-bottom: none; }
+  .history-label { color: var(--text); }
+  .history-cat { font-family: 'DM Mono', monospace; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+  .history-cat.courses { background: rgba(0,229,160,0.12); color: var(--green); }
+  .history-cat.sorties { background: rgba(255,123,53,0.12); color: var(--orange); }
+  .history-amount { font-weight: 600; font-family: 'DM Mono', monospace; }
+  .empty { color: var(--muted); font-size: 13px; font-family: 'DM Mono', monospace; text-align: center; padding: 8px 0; }
+
+  .toast {
+    position: fixed;
+    bottom: max(24px, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    max-width: 380px;
+    width: calc(100% - 32px);
+    text-align: center;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 100;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: #ff4d6d; color: #ff4d6d; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Suivi <span>Poche</span></h1>
+    <p>Tape : <b>"courses 43€ Monoprix"</b><br>ou <b>"sortie 20 euros restaurant"</b></p>
+  </div>
+
+  <div class="card">
+    <div class="input-zone">
+      <textarea id="input" placeholder="Ex: courses 43€ Monoprix&#10;Ex: sortie 20 euros restaurant" oninput="parseInput()"></textarea>
+    </div>
+
+    <div class="preview" id="preview">
+      <span class="tag" id="prev-cat">—</span>
+      <span class="preview-detail" id="prev-label">—</span>
+      <span class="preview-amount" id="prev-amount">—</span>
+    </div>
+
+    <button class="btn-send" id="btn-send" onclick="envoyer()" disabled>✓ Enregistrer</button>
+
+    <div class="semaine-info">
+      <span id="semaine-label">—</span>
+    </div>
+  </div>
+
+  <div class="card history">
+    <h3>Session en cours</h3>
+    <div id="history-list"><div class="empty">Aucune saisie pour l'instant</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrE5xBcV8YM4juK7RGGHbjEHc1PEwnL0PuclDa2ce5XzgIcjiSmBIOkm2SQSsQBnpI/exec";
+
+  let historique = [];
+  let parsed = null;
+
+  function getSemaine(dateStr) {
+    const date = dateStr ? new Date(dateStr) : new Date();
+    const jour = date.getDate();
+    const mois = date.getMonth();
+    const annee = date.getFullYear();
+
+    let jourCycle;
+    if (jour >= 28) {
+      jourCycle = jour - 28;
+    } else {
+      const joursDansMoisPrec = new Date(annee, mois, 0).getDate();
+      jourCycle = (joursDansMoisPrec - 28) + jour;
+    }
+
+    if (jourCycle <= 6)  return "Semaine 1";
+    if (jourCycle <= 13) return "Semaine 2";
+    if (jourCycle <= 20) return "Semaine 3";
+    if (jourCycle <= 27) return "Semaine 4";
+    return "FM";
+  }
+
+  document.getElementById('semaine-label').textContent = getSemaine();
+
+  function parseInput() {
+    const raw = document.getElementById('input').value;
+    const txt = raw.toLowerCase().trim();
+    const preview = document.getElementById('preview');
+    const btn = document.getElementById('btn-send');
+
+    if (!txt) {
+      preview.className = 'preview';
+      btn.disabled = true;
+      parsed = null;
+      return;
+    }
+
+    // Catégorie
+    let categorie = null;
+    if (/\bcours(es?)\b|monoprix|marché|supermarché|carrefour|franprix|lidl|picard|g20|biocoop|épicerie|intermarché|casino/.test(txt)) {
+      categorie = 'Courses';
+    } else if (/\bsortie|resto|restaurant|bar|café|cafe|ciné|cinema|concert|uber|fnac|verre|dîner|diner|amazon|boulangerie/.test(txt)) {
+      categorie = 'Sorties';
+    } else if (/^cours/.test(txt)) {
+      categorie = 'Courses';
+    } else if (/^sort/.test(txt)) {
+      categorie = 'Sorties';
+    }
+
+    // Montant
+    const m = txt.match(/(\d+([.,]\d{1,2})?)\s*(euros?|€|eur)?/);
+    const montant = m ? parseFloat(m[1].replace(',', '.')) : null;
+
+    // Intitulé : ce qui reste après avoir retiré mots-clés et montant
+    let intitule = txt
+      .replace(/\b(courses?|sorties?|euros?|eur|€)\b/g, '')
+      .replace(/\d+([.,]\d{1,2})?/g, '')
+      .replace(/\s+/g, ' ').trim();
+    intitule = intitule ? intitule.charAt(0).toUpperCase() + intitule.slice(1) : (categorie || 'Dépense');
+
+    if (categorie && montant && montant > 0) {
+      parsed = { categorie, montant, intitule };
+      document.getElementById('prev-cat').textContent = categorie;
+      document.getElementById('prev-cat').className = 'tag ' + categorie.toLowerCase();
+      document.getElementById('prev-label').textContent = intitule;
+      document.getElementById('prev-amount').textContent = montant.toFixed(2) + ' €';
+      document.getElementById('prev-amount').className = 'preview-amount ' + categorie.toLowerCase();
+      preview.className = 'preview visible';
+      btn.disabled = false;
+      btn.className = categorie === 'Sorties' ? 'btn-send sorties' : 'btn-send';
+    } else {
+      parsed = null;
+      document.getElementById('prev-cat').textContent = '?';
+      document.getElementById('prev-cat').className = 'tag error';
+      document.getElementById('prev-label').textContent = !categorie ? 'Précise "courses" ou "sortie"' : 'Précise le montant';
+      document.getElementById('prev-amount').textContent = '';
+      preview.className = 'preview visible';
+      btn.disabled = true;
+    }
+  }
+
+  async function envoyer() {
+    if (!parsed) return;
+    const btn = document.getElementById('btn-send');
+    btn.disabled = true;
+    btn.textContent = '⏳ Envoi…';
+
+    const params = new URLSearchParams({
+      categorie: parsed.categorie,
+      intitule: parsed.intitule,
+      montant: parsed.montant,
+      date: new Date().toISOString().split('T')[0]
+    });
+
+    const url = SCRIPT_URL + '?' + params.toString();
+
+    // Technique script tag — fonctionne sur iOS Safari
+    await new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = url + '&callback=ignore';
+      script.onload = () => { document.body.removeChild(script); resolve(); };
+      script.onerror = () => { document.body.removeChild(script); resolve(); };
+      document.body.appendChild(script);
+      setTimeout(resolve, 3000);
+    });
+    historique.push({ ...parsed });
+    updateHistory();
+    showToast('✓ ' + parsed.categorie + ' · ' + parsed.intitule + ' · ' + parsed.montant.toFixed(2) + ' €', 'success');
+
+    document.getElementById('input').value = '';
+    document.getElementById('preview').className = 'preview';
+    parsed = null;
+    btn.disabled = false;
+    btn.textContent = '✓ Enregistrer';
+    btn.className = 'btn-send';
+  }
+
+  function updateHistory() {
+    const el = document.getElementById('history-list');
+    if (!historique.length) {
+      el.innerHTML = '<div class="empty">Aucune saisie pour l\'instant</div>';
+      return;
+    }
+    el.innerHTML = historique.slice().reverse().map(h => `
+      <div class="history-item">
+        <div><span class="history-label">${h.intitule}</span><span class="history-cat ${h.categorie.toLowerCase()}">${h.categorie}</span></div>
+        <span class="history-amount">${h.montant.toFixed(2)} €</span>
+      </div>`).join('');
+  }
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type;
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  document.getElementById('input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (!document.getElementById('btn-send').disabled) envoyer();
+    }
+  });
+</script>
+</body>
+</html>
